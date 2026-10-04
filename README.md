@@ -20,10 +20,10 @@ A quick weather check and gear call for motorcycle riders. Front-end only: React
 ## Getting started
 
 ```bash
-npm install
-npm run dev      # http://localhost:5173
-npm test         # unit tests (vitest)
-npm run build    # type-check + production build to dist/
+yarn install
+yarn dev         # http://localhost:5173
+yarn test        # unit tests (vitest)
+yarn build       # type-check + production build to dist/
 ```
 
 ## Data sources
