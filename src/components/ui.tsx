@@ -90,23 +90,16 @@ export function Slider({ label, value, min, max, step, onChange, display }: {
   )
 }
 
-/** Small stat tile. `onDark` styles it for the always-dark dashboard card. */
-export function Stat({ icon, label, value, sub, onDark }: {
-  icon: string
-  label: string
-  value: ReactNode
-  sub?: ReactNode
-  onDark?: boolean
-}) {
-  const muted = onDark ? 'text-stone-400' : 'text-stone-500 dark:text-stone-400'
+/** Small stat tile. */
+export function Stat({ icon, label, value, sub }: { icon: string; label: string; value: ReactNode; sub?: ReactNode }) {
   return (
-    <div className={`rounded-2xl px-3 py-2.5 ${onDark ? 'bg-white/5 text-white' : 'bg-stone-100 dark:bg-stone-800/70'}`}>
-      <div className={`flex items-center gap-1.5 text-xs font-medium uppercase tracking-wide ${muted}`}>
+    <div className="rounded-2xl bg-white/80 px-3 py-2.5 ring-1 ring-stone-200 dark:bg-white/5 dark:ring-0">
+      <div className="flex items-center gap-1.5 text-xs font-medium uppercase tracking-wide text-stone-500 dark:text-stone-400">
         <span aria-hidden>{icon}</span>
         {label}
       </div>
       <div className="mt-0.5 font-display text-xl font-semibold">{value}</div>
-      {sub && <div className={`text-xs ${muted}`}>{sub}</div>}
+      {sub && <div className="text-xs text-stone-500 dark:text-stone-400">{sub}</div>}
     </div>
   )
 }
