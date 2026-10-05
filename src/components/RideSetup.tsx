@@ -108,8 +108,9 @@ export function RideSetup({ settings: s, update, origin, onOrigin, onLocate, loc
           onChange={(mode) => update({ mode })}
           options={[
             { value: 'radius', label: '⭕ Radius', title: 'Weather all around me' },
-            { value: 'route', label: '🛣️ A → B', title: 'Ride to a destination' },
-            { value: 'loop', label: '🎲 Just ride', title: 'Plan a fun loop for me' },
+            // Non-breaking spaces: on narrow screens a label may wrap after its icon, never mid-label.
+            { value: 'route', label: '🛣️ A → B', title: 'Ride to a destination' },
+            { value: 'loop', label: '🎲 Just ride', title: 'Plan a fun loop for me' },
           ]}
         />
 

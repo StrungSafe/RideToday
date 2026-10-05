@@ -189,8 +189,8 @@ export default function App() {
         {!origin ? (
           <Welcome onLocate={locate} locating={locating} error={locError} onPick={pickOrigin} />
         ) : (
-          <div className="mt-6 grid gap-5 lg:grid-cols-[360px_minmax(0,1fr)]">
-            <aside className="order-last space-y-5 lg:order-first">
+          <div className="mt-6 grid grid-cols-[minmax(0,1fr)] gap-5 lg:grid-cols-[360px_minmax(0,1fr)]">
+            <aside className="order-last min-w-0 space-y-5 lg:order-first">
               <RideSetup
                 settings={settings}
                 update={updateRide}
@@ -228,7 +228,7 @@ export default function App() {
                       type="button"
                       onClick={() => commute(c)}
                       aria-pressed={active}
-                      className={`flex items-center justify-center gap-2 rounded-2xl border-2 px-3 py-2.5 font-display text-sm font-semibold uppercase tracking-wide transition ${
+                      className={`flex min-w-0 items-center justify-center gap-2 rounded-2xl border-2 px-3 py-2.5 text-center leading-tight font-display text-sm font-semibold uppercase tracking-wide transition ${
                         active
                           ? 'border-throttle-500 bg-throttle-500 text-white'
                           : 'border-throttle-400 bg-throttle-50 text-throttle-700 dark:border-throttle-500/50 dark:bg-throttle-500/10 dark:text-throttle-300'

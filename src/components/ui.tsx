@@ -9,7 +9,7 @@ export function Card({ title, icon, action, children, className = '' }: {
 }) {
   return (
     <section
-      className={`rounded-3xl border border-stone-200 bg-white/90 p-5 shadow-sm backdrop-blur dark:border-stone-800 dark:bg-stone-900/80 ${className}`}
+      className={`rounded-3xl border border-stone-200 bg-white/90 p-4 shadow-sm sm:p-5 backdrop-blur dark:border-stone-800 dark:bg-stone-900/80 ${className}`}
     >
       {title && (
         <header className="mb-4 flex items-center justify-between gap-2">
@@ -48,7 +48,7 @@ export function Segmented<T extends string>({ value, options, onChange, label, s
             aria-checked={active}
             title={o.title}
             onClick={() => onChange(o.value)}
-            className={`flex-1 whitespace-nowrap rounded-xl font-medium transition-all ${size === 'sm' ? 'px-2.5 py-1 text-xs' : 'px-2 py-2 text-sm'} ${
+            className={`min-w-0 flex-1 rounded-xl leading-tight font-medium transition-all lg:whitespace-nowrap ${size === 'sm' ? 'px-2.5 py-1 text-xs' : 'px-2 py-2 text-sm'} ${
               active
                 ? 'bg-white text-stone-900 shadow-sm dark:bg-stone-600 dark:text-white'
                 : 'text-stone-500 hover:text-stone-800 dark:text-stone-400 dark:hover:text-stone-100'
@@ -75,7 +75,7 @@ export function Slider({ label, value, min, max, step, onChange, display }: {
     <label className="block">
       <div className="mb-2 flex items-baseline justify-between gap-2 text-sm">
         <span className="font-medium text-stone-600 dark:text-stone-300">{label}</span>
-        <span className="font-display text-base font-semibold text-throttle-600 dark:text-throttle-400">{display}</span>
+        <span className="shrink-0 whitespace-nowrap font-display text-base font-semibold text-throttle-600 dark:text-throttle-400">{display}</span>
       </div>
       <input
         type="range"
