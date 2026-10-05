@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { ConditionsCard } from './components/ConditionsCard'
 import { GearLoadout } from './components/GearLoadout'
 import { Hazards } from './components/Hazards'
-import { Header } from './components/Header'
+import { Header, REPO_URL } from './components/Header'
 import { PlaceSearch } from './components/PlaceSearch'
 import { RideMap } from './components/RideMap'
 import { RiderProfile } from './components/RiderProfile'
@@ -197,6 +197,11 @@ export default function App() {
           </a>
           <br />
           Gear suggestions are a starting point — you know your bike, your body and your roads. Ride safe. ✌️
+          <br />
+          <a className="underline hover:text-throttle-500" href={REPO_URL} target="_blank" rel="noreferrer">
+            Source on GitHub
+          </a>{' '}
+          · MIT License
         </footer>
       </div>
     </div>

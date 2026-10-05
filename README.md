@@ -50,3 +50,7 @@ src/
 The gear and score rules live in `src/lib/gear.ts`, and that file is the place to tune them.
 
 > Gear suggestions are only a starting point. You know your bike, your body and your roads best. Ride safe.
+
+## License
+
+[MIT](LICENSE)
