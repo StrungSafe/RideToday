@@ -382,6 +382,23 @@ export default function App() {
           · Routing by{' '}
           <a className="underline hover:text-throttle-500" href="https://project-osrm.org/" target="_blank" rel="noreferrer">
             OSRM
+          </a>{' '}
+          &amp;{' '}
+          <a className="underline hover:text-throttle-500" href="https://valhalla.github.io/valhalla/" target="_blank" rel="noreferrer">
+            Valhalla
+          </a>
+          <br />
+          Search by{' '}
+          <a className="underline hover:text-throttle-500" href="https://photon.komoot.io/" target="_blank" rel="noreferrer">
+            Photon
+          </a>{' '}
+          &amp;{' '}
+          <a className="underline hover:text-throttle-500" href="https://nominatim.org/" target="_blank" rel="noreferrer">
+            Nominatim
+          </a>{' '}
+          · Stops via{' '}
+          <a className="underline hover:text-throttle-500" href="https://overpass-api.de/" target="_blank" rel="noreferrer">
+            Overpass
           </a>
           <br />
           Gear suggestions are a starting point — you know your bike, your body and your roads. Ride safe. ✌️
@@ -422,7 +439,7 @@ function Welcome({ onLocate, locating, error, onPick }: {
       {error && <p className="mt-3 text-sm text-red-600 dark:text-red-400">{error}</p>}
       <div className="mx-auto mt-6 max-w-sm text-left">
         <div className="mb-2 text-center text-sm text-stone-500 dark:text-stone-400">or search for a place</div>
-        <PlaceSearch placeholder="City or town…" onPick={onPick} />
+        <PlaceSearch placeholder="Address or town…" onPick={onPick} />
       </div>
     </div>
   )

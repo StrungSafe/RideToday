@@ -1,4 +1,4 @@
-import type { LatLon, Place } from './types'
+import type { LatLon } from './types'
 
 const R_KM = 6371
 const rad = (d: number) => (d * Math.PI) / 180
@@ -103,23 +103,6 @@ export async function fetchRoute(
     const km = distanceKm(from, to) * 1.25
     return { line: [from, to], distanceKm: km, durationHours: km / fallbackSpeedKmh, approximate: true }
   }
-}
-
-/** Forward geocoding (city / place search) via Open-Meteo. */
-export async function searchPlaces(query: string, signal?: AbortSignal): Promise<Place[]> {
-  const q = query.trim()
-  if (q.length < 2) return []
-  const url = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(q)}&count=6&language=en&format=json`
-  const res = await fetch(url, { signal })
-  if (!res.ok) throw new Error('Place search failed')
-  const data = await res.json()
-  return (data.results ?? []).map(
-    (r: { name: string; admin1?: string; country_code?: string; latitude: number; longitude: number }) => ({
-      name: [r.name, r.admin1, r.country_code].filter(Boolean).join(', '),
-      lat: r.latitude,
-      lon: r.longitude,
-    }),
-  )
 }
 
 /** Best-effort reverse geocoding for a friendly place name. */

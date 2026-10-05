@@ -1,7 +1,8 @@
 import { useState } from 'react'
-import { getBrowserLocation, reverseGeocode } from '../lib/geo'
+import { distanceKm, getBrowserLocation, reverseGeocode } from '../lib/geo'
 import type { RouteLibrary, SavedRoute } from '../lib/savedRoutes'
-import type { MyPlaces, Place, UnitSystem } from '../lib/types'
+import type { LatLon, MyPlaces, Place, UnitSystem } from '../lib/types'
+import { PinPicker } from './PinPicker'
 import { PlaceSearch } from './PlaceSearch'
 import { SavedRoutesList } from './SavedRoutes'
 import { Sheet } from './Sheet'
@@ -60,23 +61,28 @@ export function RoutesSheet({ open, onClose, places, onPlace, origin, lib, activ
   )
 }
 
-/** Why the search finds towns but not street addresses, and what to do instead. */
-function AddressNote() {
+/** Where each way of setting a place sends data — so riders can choose. */
+function PrivacyNote() {
   return (
     <details className="group rounded-xl bg-stone-100 px-3 py-2 text-[11px] text-stone-600 dark:bg-stone-800/70 dark:text-stone-300">
       <summary className="cursor-pointer list-none font-medium [&::-webkit-details-marker]:hidden">
-        ℹ️ Search finds towns, not street addresses. For your exact spot, use <strong>📍 Use my current location</strong> while
-        you’re there. <span className="text-throttle-600 underline group-open:hidden dark:text-throttle-400">Why?</span>
+        ℹ️ Your places are stored only in this browser.{' '}
+        <span className="text-throttle-600 underline group-open:hidden dark:text-throttle-400">What gets shared when I set one?</span>
       </summary>
-      <p className="mt-1.5">
-        RideToday runs entirely in your browser, with no server and no accounts. Place search uses a free, open service
-        (Open-Meteo) that only covers cities and towns. The services that can look up street addresses either need an API key
-        tied to an account (usually paid) or, like OpenStreetMap’s free one, don’t allow search-as-you-type from apps
-        like this one.
-      </p>
-      <p className="mt-1.5">
-        Your location is better anyway: it’s accurate to your driveway, and it’s stored only in this browser.
-      </p>
+      <ul className="mt-1.5 list-disc space-y-1 pl-4">
+        <li>
+          <strong>Search:</strong> what you type goes to Photon (komoot), a free OpenStreetMap search. “Search OpenStreetMap”
+          goes to Nominatim instead. Address coverage depends on OpenStreetMap, so if yours is missing, use a pin.
+        </li>
+        <li>
+          <strong>📍 Current location:</strong> your browser asks permission first. Your coordinates are then sent to
+          BigDataCloud to get a town name for the label.
+        </li>
+        <li>
+          <strong>📌 Pick on map:</strong> nothing is searched or looked up. The only thing loaded is the map images for the
+          area you view.
+        </li>
+      </ul>
     </details>
   )
 }
@@ -91,12 +97,20 @@ function PlaceRow({ kind, place, origin, onChange }: {
   const [editing, setEditing] = useState(false)
   const [locating, setLocating] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [pinning, setPinning] = useState(false)
   const showForm = editing || !place
 
   const set = (p: Place) => {
     onChange(p)
     setEditing(false)
+    setPinning(false)
     setError(null)
+  }
+
+  /** A pin keeps the place's name when only nudged (fine-tuning a search result). */
+  const setPin = (p: LatLon) => {
+    const nudged = place && distanceKm(place, p) < 0.25
+    set({ ...p, name: nudged ? place.name : `Pinned on map (${meta.label.toLowerCase()})` })
   }
 
   const useMyLocation = async () => {
@@ -142,8 +156,15 @@ function PlaceRow({ kind, place, origin, onChange }: {
         )}
       </div>
 
-      {showForm && (
+      {showForm && pinning && (
+        <div className="mt-2">
+          <PinPicker initial={place} center={origin} onPick={setPin} onCancel={() => setPinning(false)} />
+        </div>
+      )}
+
+      {showForm && !pinning && (
         <div className="mt-2 space-y-2">
+          <PlaceSearch placeholder={`Search your ${meta.label.toLowerCase()} address…`} onPick={set} bias={place ?? origin} />
           <div className="flex flex-wrap gap-1.5">
             <button
               type="button"
@@ -152,6 +173,13 @@ function PlaceRow({ kind, place, origin, onChange }: {
               className="rounded-xl bg-stone-900 px-3 py-1.5 text-xs font-semibold text-white hover:bg-stone-700 disabled:opacity-60 dark:bg-stone-100 dark:text-stone-900"
             >
               {locating ? 'Locating…' : '📍 Use my current location'}
+            </button>
+            <button
+              type="button"
+              onClick={() => setPinning(true)}
+              className="rounded-xl border border-stone-300 px-3 py-1.5 text-xs font-semibold hover:border-throttle-500 dark:border-stone-700"
+            >
+              📌 {place ? 'Adjust on map' : 'Pick on map'}
             </button>
             {origin && !(place && samePlace(place, origin)) && (
               <button
@@ -168,13 +196,8 @@ function PlaceRow({ kind, place, origin, onChange }: {
               </button>
             )}
           </div>
-          <PlaceSearch
-            placeholder={`…or search a town for ${meta.label.toLowerCase()}`}
-            onPick={set}
-            addressHint="Street addresses can’t be searched — try your town, or use 📍 Use my current location."
-          />
           {error && <p className="text-xs text-red-600 dark:text-red-400">{error}</p>}
-          <AddressNote />
+          <PrivacyNote />
           {!place && <p className="text-[11px] text-stone-500 dark:text-stone-400">{meta.hint}</p>}
         </div>
       )}

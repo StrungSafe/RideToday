@@ -12,8 +12,8 @@ A quick weather check and gear call for motorcycle riders. Front-end only: React
   - It tries several candidate loops and rates each one for twistiness, hills, not doubling back, and how close it is to your ride time. You get a **Fun rating /10**, and **Another route** moves to the next candidate.
   - It suggests **gas, food and bar stops** along the loop: gas early or midway, food around halfway, bars at the finish (after you park the bike). You can choose which stops to add.
   - Take it with you via **Open in Google Maps** or a **GPX file** for your GPS.
-- **Home, work and saved routes.** These live behind the ⚙️ button on Your Ride, and nothing leaves your device.
-  - Save your 🏠 **Home** and 🏢 **Work** places. Then **🏠 Home** starts any ride from home, and **🏢 To work** / **🏠 Head home** run your commute with the weather and gear for that trip.
+- **Home, work and saved routes.** These live behind the ⚙️ button on Your Ride and are stored only in your browser.
+  - Save your 🏠 **Home** and 🏢 **Work** places by searching a street address, using your current location, or dropping a 📌 pin on a map. The pin needs no search at all. Then **🏠 Home** starts any ride from home, and **🏢 To work** / **🏠 Head home** run your commute with the weather and gear for that trip.
   - You can also save Just ride loops and A → B routes. Loops keep their exact route, simplified to about 5 m, which is roughly 3–7 KB each. A → B routes keep only their endpoints (~250 bytes) and are re-routed when loaded.
 - **Ride-O-Meter.** A 0–100 score shown on a speedometer gauge, with a verdict ("Send it!" down to "Maybe take the cage").
 - **Wind chill at speed.** Pick City, Backroads or Highway and the app works out how cold the air feels on the bike.
@@ -40,7 +40,8 @@ All are free and need no keys. They are called straight from the browser:
 | What | Service |
 | --- | --- |
 | Forecast | [Open-Meteo](https://open-meteo.com/) |
-| City search | Open-Meteo Geocoding |
+| Address & place search (as you type) | [Photon](https://photon.komoot.io/) by komoot (OpenStreetMap data); Open-Meteo Geocoding as a towns-only fallback |
+| Address search (on request) | [Nominatim](https://nominatim.org/), with one explicit search per tap, as its usage policy requires |
 | Place name for your location | BigDataCloud reverse geocode (client endpoint) |
 | Road routing (A to B) | Public [OSRM](https://project-osrm.org/) demo server (falls back to a straight-line estimate) |
 | Loop routing (Just ride) | [Valhalla](https://valhalla.github.io/valhalla/) motorcycle costing on the FOSSGIS server (`valhalla1.openstreetmap.de`) |
