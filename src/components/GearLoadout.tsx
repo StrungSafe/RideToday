@@ -23,22 +23,34 @@ const LEVEL: Record<GearLevel, { label: string; cls: string }> = {
   optional: { label: 'Optional', cls: 'bg-stone-200 text-stone-600 dark:bg-stone-700 dark:text-stone-300' },
 }
 
-export function GearLoadout({ plan, atgatt, gusty, units }: {
+export function GearLoadout({ plan, atgatt, gusty, units, onOpenSettings }: {
   plan: GearPlan
   atgatt: boolean
   gusty: boolean
   units: UnitSystem
+  onOpenSettings: () => void
 }) {
   return (
     <Card
       title="Today’s Loadout"
       icon="🎒"
       action={
-        atgatt ? (
-          <span className="rounded-full bg-throttle-500 px-2.5 py-1 font-display text-xs font-bold uppercase tracking-wider text-white">
-            🛡️ ATGATT
-          </span>
-        ) : undefined
+        <div className="flex items-center gap-2">
+          {atgatt && (
+            <span className="rounded-full bg-throttle-500 px-2.5 py-1 font-display text-xs font-bold uppercase tracking-wider text-white">
+              🛡️ ATGATT
+            </span>
+          )}
+          <button
+            type="button"
+            onClick={onOpenSettings}
+            aria-label="Rider settings"
+            title="Rider settings"
+            className="grid h-9 w-9 place-items-center rounded-full bg-stone-100 text-lg transition hover:rotate-45 hover:bg-throttle-50 dark:bg-stone-800 dark:hover:bg-stone-700"
+          >
+            <span aria-hidden>⚙️</span>
+          </button>
+        </div>
       }
     >
       <div className="grid gap-5 md:grid-cols-[minmax(0,200px)_1fr]">

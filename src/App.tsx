@@ -5,7 +5,7 @@ import { Hazards } from './components/Hazards'
 import { Header, REPO_URL } from './components/Header'
 import { PlaceSearch } from './components/PlaceSearch'
 import { RideMap } from './components/RideMap'
-import { RiderProfile } from './components/RiderProfile'
+import { RiderProfile, RiderProfileSheet } from './components/RiderProfile'
 import { RideSetup } from './components/RideSetup'
 import { HourlyTimeline, RouteTimeline } from './components/Timeline'
 import { Card } from './components/ui'
@@ -37,6 +37,7 @@ export default function App() {
   const [refreshKey, setRefreshKey] = useState(0)
   const [locating, setLocating] = useState(false)
   const [locError, setLocError] = useState<string | null>(null)
+  const [profileOpen, setProfileOpen] = useState(false)
 
   const update = useCallback((patch: Partial<Settings>) => setSettings((s) => ({ ...s, ...patch })), [setSettings])
 
@@ -102,7 +103,9 @@ export default function App() {
                 onDestination={setDestination}
               />
               {locError && <p className="text-sm text-red-600 dark:text-red-400">{locError}</p>}
+              {/* On mobile the profile is reached from the loadout's settings button instead. */}
               <RiderProfile
+                className="hidden lg:block"
                 comfort={settings.comfort}
                 onComfort={(comfort) => update({ comfort })}
                 atgatt={settings.atgatt}
@@ -172,7 +175,13 @@ export default function App() {
                       ↻ Refresh
                     </button>
                   </div>
-                  <GearLoadout plan={plan} atgatt={settings.atgatt} gusty={c.maxGust >= 40} units={settings.units} />
+                  <GearLoadout
+                    plan={plan}
+                    atgatt={settings.atgatt}
+                    gusty={c.maxGust >= 40}
+                    units={settings.units}
+                    onOpenSettings={() => setProfileOpen(true)}
+                  />
                   <div className="lg:hidden">
                     <Hazards hazards={score.hazards} />
                   </div>
@@ -187,6 +196,15 @@ export default function App() {
             </main>
           </div>
         )}
+
+        <RiderProfileSheet
+          open={profileOpen}
+          onClose={() => setProfileOpen(false)}
+          comfort={settings.comfort}
+          onComfort={(comfort) => update({ comfort })}
+          atgatt={settings.atgatt}
+          onAtgatt={(atgatt) => update({ atgatt })}
+        />
 
         <footer className="mt-10 border-t border-stone-200 pt-4 text-center text-xs text-stone-500 dark:border-stone-800 dark:text-stone-400">
           Weather by{' '}

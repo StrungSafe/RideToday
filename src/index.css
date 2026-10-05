@@ -19,6 +19,7 @@
   --animate-ride: ride 2.4s linear infinite;
   --animate-road: road 0.6s linear infinite;
   --animate-bob: bob 0.35s ease-in-out infinite alternate;
+  --animate-sheet: sheet 0.25s ease-out;
 
   @keyframes ride {
     0% { left: -60px; }
@@ -27,6 +28,10 @@
   @keyframes road {
     0% { background-position: 0 0; }
     100% { background-position: -40px 0; }
+  }
+  @keyframes sheet {
+    0% { transform: translateY(32px); opacity: 0; }
+    100% { transform: translateY(0); opacity: 1; }
   }
   @keyframes bob {
     0% { transform: translateY(0); }
