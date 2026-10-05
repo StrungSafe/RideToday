@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import type { Route } from '../lib/geo'
 import { fetchStops, type Stop } from '../lib/stops'
 
@@ -13,6 +13,7 @@ export function useStops(route: (Route & { id: string }) | null) {
     status: 'idle',
     stops: [],
   })
+  const [attempt, setAttempt] = useState(0)
 
   useEffect(() => {
     if (!route) {
@@ -25,8 +26,9 @@ export function useStops(route: (Route & { id: string }) | null) {
       .then((stops) => setState({ status: 'ready', stops, routeId: route.id }))
       .catch(() => !ctrl.signal.aborted && setState({ status: 'error', stops: [], routeId: route.id }))
     return () => ctrl.abort()
-    // A route is identified by its id; re-run only when it changes.
-  }, [route?.id])
+    // A route is identified by its id; re-run only when it changes (or on retry).
+  }, [route?.id, attempt])
 
-  return state
+  const retry = useCallback(() => setAttempt((n) => n + 1), [])
+  return { ...state, retry }
 }

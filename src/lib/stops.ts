@@ -31,6 +31,8 @@ const AMENITY: Record<StopKind, string[]> = {
 
 const ENDPOINTS = ['https://overpass-api.de/api/interpreter', 'https://overpass.kumi.systems/api/interpreter']
 
+const ATTEMPT_TIMEOUT_MS = 15000
+
 /** Max distance (m) a stop can be from the route. */
 const SEARCH_RADIUS_M = 600
 
@@ -63,14 +65,22 @@ export async function fetchStops(route: Route, kinds: StopKind[], signal?: Abort
   let data: { elements?: OsmElement[] } | null = null
   let lastErr: unknown
   for (const url of ENDPOINTS) {
+    // Public Overpass servers sometimes hang when busy — give each one a time limit.
+    const attempt = new AbortController()
+    const onAbort = () => attempt.abort()
+    signal?.addEventListener('abort', onAbort)
+    const timer = setTimeout(() => attempt.abort(), ATTEMPT_TIMEOUT_MS)
     try {
-      const res = await fetch(url, { method: 'POST', body: new URLSearchParams({ data: query }), signal })
+      const res = await fetch(url, { method: 'POST', body: new URLSearchParams({ data: query }), signal: attempt.signal })
       if (!res.ok) throw new Error(`Stop search failed (${res.status})`)
       data = await res.json()
       break
     } catch (e) {
       if (signal?.aborted) throw e
       lastErr = e
+    } finally {
+      clearTimeout(timer)
+      signal?.removeEventListener('abort', onAbort)
     }
   }
   if (!data) throw lastErr instanceof Error ? lastErr : new Error('Stop search failed')

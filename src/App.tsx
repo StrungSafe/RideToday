@@ -8,17 +8,24 @@ import { PlaceSearch } from './components/PlaceSearch'
 import { RideMap } from './components/RideMap'
 import { RiderProfileSheet } from './components/RiderProfile'
 import { RideSetup } from './components/RideSetup'
+import { SavedRoutes } from './components/SavedRoutes'
+import { SaveRouteForm } from './components/SaveRouteForm'
 import { HourlyTimeline, RouteTimeline } from './components/Timeline'
 import { Card } from './components/ui'
 import { useLoopRoute } from './hooks/useLoopRoute'
 import { useRideForecast } from './hooks/useRideForecast'
+import { useSavedRoutes } from './hooks/useSavedRoutes'
 import { useStops } from './hooks/useStops'
 import { useStoredState } from './hooks/useStoredState'
 import { useTheme } from './hooks/useTheme'
 import { recommendGear, rideScore } from './lib/gear'
 import { getBrowserLocation, reverseGeocode } from './lib/geo'
-import type { Place, Settings } from './lib/types'
-import { KM_PER_MILE, defaultUnits } from './lib/units'
+import { abToSaved, loopToSaved, savedToLoop, type SavedRoute } from './lib/savedRoutes'
+import type { LatLon, Place, Settings } from './lib/types'
+import { KM_PER_MILE, defaultUnits, fmtDistance } from './lib/units'
+
+const shortName = (p: Place) => p.name.split(',')[0]
+const samePlace = (a: LatLon, b: LatLon) => a.lat.toFixed(4) === b.lat.toFixed(4) && a.lon.toFixed(4) === b.lon.toFixed(4)
 
 const DEFAULT_SETTINGS: Settings = {
   units: defaultUnits(),
@@ -44,8 +51,34 @@ export default function App() {
   const [locating, setLocating] = useState(false)
   const [locError, setLocError] = useState<string | null>(null)
   const [profileOpen, setProfileOpen] = useState(false)
+  const library = useSavedRoutes()
+  /** The saved route currently being shown, if any. */
+  const [activeSavedId, setActiveSavedId] = useState<string | null>(null)
 
   const update = useCallback((patch: Partial<Settings>) => setSettings((s) => ({ ...s, ...patch })), [setSettings])
+
+  // Changing what the ride is (start, destination, loop length…) means it's no longer the saved route.
+  const updateRide = useCallback(
+    (patch: Partial<Settings>) => {
+      if ('loopHours' in patch || 'avoidHighways' in patch || 'roundTrip' in patch) setActiveSavedId(null)
+      update(patch)
+    },
+    [update],
+  )
+  const pickOrigin = useCallback(
+    (p: Place) => {
+      setActiveSavedId(null)
+      setOrigin(p)
+    },
+    [setOrigin],
+  )
+  const pickDestination = useCallback(
+    (p: Place | null) => {
+      setActiveSavedId(null)
+      setDestination(p)
+    },
+    [setDestination],
+  )
 
   const locate = useCallback(async () => {
     setLocating(true)
@@ -53,17 +86,42 @@ export default function App() {
     try {
       const pos = await getBrowserLocation()
       const name = (await reverseGeocode(pos)) ?? 'My location'
-      setOrigin({ ...pos, name })
+      pickOrigin({ ...pos, name })
     } catch (e) {
       setLocError(e instanceof Error ? e.message : 'Could not get your location.')
     } finally {
       setLocating(false)
     }
-  }, [setOrigin])
+  }, [pickOrigin])
+
+  const rideSaved = useCallback(
+    (r: SavedRoute) => {
+      setOrigin(r.origin)
+      if (r.kind === 'loop') {
+        update({ mode: 'loop' })
+      } else {
+        setDestination(r.destination)
+        update({ mode: 'route', roundTrip: r.roundTrip })
+      }
+      setActiveSavedId(r.id)
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+    },
+    [setOrigin, setDestination, update],
+  )
+
+  const activeSaved = library.lib.routes.find((r) => r.id === activeSavedId) ?? null
+  // Rebuild only when the route itself changes (not on rename), so weather isn't re-fetched needlessly.
+  const savedLoopLine = activeSaved?.kind === 'loop' ? activeSaved.line : null
+  const savedLoop = useMemo(() => (activeSaved?.kind === 'loop' ? savedToLoop(activeSaved) : null), [activeSavedId, savedLoopLine])
+  const savedLoopInfo = useMemo(
+    () => (activeSaved?.kind === 'loop' ? { name: activeSaved.name, stops: activeSaved.stops } : null),
+    [activeSaved],
+  )
 
   const loopMode = settings.mode === 'loop'
-  const loop = useLoopRoute(origin, loopMode, settings.loopHours, settings.avoidHighways)
-  const loopRoute = loopMode ? loop.loop : null
+  // A saved loop replaces the planner until the rider asks for a new route.
+  const loop = useLoopRoute(origin, loopMode && !savedLoop, settings.loopHours, settings.avoidHighways)
+  const loopRoute = loopMode ? (savedLoop ?? loop.loop) : null
   const stops = useStops(loopRoute)
   const forecast = useRideForecast(origin, destination, settings, refreshKey, loopRoute)
 
@@ -92,27 +150,49 @@ export default function App() {
 
   const loading = forecast.status === 'loading'
 
+  // Is what's on screen already in the library? (Planned loop saved earlier, or same A → B trip.)
+  const loopSavedAs =
+    loopRoute && !savedLoop
+      ? (library.lib.routes.find((r) => r.kind === 'loop' && r.sourceId === loopRoute.id)?.name ?? null)
+      : null
+  const abSavedAs =
+    settings.mode === 'route' && origin && destination
+      ? (library.lib.routes.find(
+          (r) => r.kind === 'ab' && samePlace(r.origin, origin) && samePlace(r.destination, destination) && r.roundTrip === settings.roundTrip,
+        )?.name ?? null)
+      : null
+  const showHomeShortcut = library.home && library.home.id !== activeSavedId
+
   return (
     <div className="asphalt min-h-screen">
       <div className="mx-auto max-w-7xl px-4 py-5 sm:px-6 lg:py-8">
         <Header theme={theme.pref} onTheme={theme.setPref} units={settings.units} onUnits={(units) => update({ units })} />
 
         {!origin ? (
-          <Welcome onLocate={locate} locating={locating} error={locError} onPick={setOrigin} />
+          <Welcome onLocate={locate} locating={locating} error={locError} onPick={pickOrigin} />
         ) : (
           <div className="mt-6 grid gap-5 lg:grid-cols-[360px_minmax(0,1fr)]">
             <aside className="order-last space-y-5 lg:order-first">
               <RideSetup
                 settings={settings}
-                update={update}
+                update={updateRide}
                 origin={origin}
-                onOrigin={setOrigin}
+                onOrigin={pickOrigin}
                 onLocate={locate}
                 locating={locating}
                 destination={destination}
-                onDestination={setDestination}
+                onDestination={pickDestination}
               />
               {locError && <p className="text-sm text-red-600 dark:text-red-400">{locError}</p>}
+              <SavedRoutes
+                lib={library.lib}
+                activeId={activeSavedId}
+                units={settings.units}
+                onRide={rideSaved}
+                onRemove={library.remove}
+                onRename={library.rename}
+                onToggleHome={library.toggleHome}
+              />
               {/* Desktop: road report lives in the left column. On mobile it stays with the results (below). */}
               {score && (
                 <div className="hidden lg:block">
@@ -122,20 +202,40 @@ export default function App() {
             </aside>
 
             <main className="min-w-0 space-y-5">
+              {/* One tap to the home route. On desktop it's also in the sidebar's Saved Routes. */}
+              {showHomeShortcut && library.home && (
+                <button
+                  type="button"
+                  onClick={() => rideSaved(library.home!)}
+                  className="flex w-full items-center gap-3 rounded-2xl border-2 border-throttle-400 bg-throttle-50 px-4 py-2.5 text-left transition hover:bg-throttle-100 lg:hidden dark:border-throttle-500/50 dark:bg-throttle-500/10 dark:hover:bg-throttle-500/20"
+                >
+                  <span className="text-2xl" aria-hidden>🏠</span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block text-xs font-semibold uppercase tracking-wide text-throttle-600 dark:text-throttle-400">Home route</span>
+                    <span className="block truncate font-semibold">{library.home.name}</span>
+                  </span>
+                  <span className="font-display text-sm font-semibold uppercase">Ride it →</span>
+                </button>
+              )}
+
               {loopMode && (
                 <LoopCard
                   origin={origin}
-                  status={loop.status}
+                  status={savedLoop ? 'ready' : loop.status}
                   error={loop.error}
-                  loop={loop.loop}
+                  loop={loopRoute}
                   index={loop.index}
-                  total={loop.loops.length}
+                  total={savedLoop ? 0 : loop.loops.length}
                   progress={loop.progress}
-                  onShuffle={loop.shuffle}
+                  onShuffle={savedLoop ? () => setActiveSavedId(null) : loop.shuffle}
                   samples={forecast.route === loopRoute ? forecast.samples : []}
                   settings={settings}
                   update={update}
                   stops={stops}
+                  saved={savedLoopInfo}
+                  savedAs={loopSavedAs}
+                  defaultSaveName={loopRoute ? `${shortName(origin)} loop · ${fmtDistance(loopRoute.distanceKm, settings.units)}` : ''}
+                  onSave={(name, home, picked) => (loopRoute ? library.add(loopToSaved(loopRoute, origin, picked, name), home) : null)}
                 />
               )}
 
@@ -204,7 +304,17 @@ export default function App() {
                   <div className="lg:hidden">
                     <Hazards hazards={score.hazards} />
                   </div>
-                  {!loopMode && <RideMap origin={origin} samples={forecast.samples} route={forecast.route} settings={settings} />}
+                  {!loopMode && (
+                    <RideMap origin={origin} samples={forecast.samples} route={forecast.route} settings={settings}>
+                      {settings.mode === 'route' && destination && (
+                        <SaveRouteForm
+                          defaultName={`${shortName(origin)} → ${shortName(destination)}`}
+                          savedName={abSavedAs}
+                          onSave={(name, home) => library.add(abToSaved(origin, destination, settings.roundTrip, name), home)}
+                        />
+                      )}
+                    </RideMap>
+                  )}
                   {settings.mode !== 'radius' ? (
                     <RouteTimeline samples={forecast.samples} settings={settings} />
                   ) : (

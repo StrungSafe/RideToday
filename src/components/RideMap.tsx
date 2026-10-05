@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, type ReactNode } from 'react'
 import { Circle, CircleMarker, MapContainer, Marker, Polyline, TileLayer, Tooltip, useMap } from 'react-leaflet'
 import { divIcon, latLngBounds } from 'leaflet'
 import type { Route } from '../lib/geo'
@@ -104,7 +104,14 @@ export function RideMapView({ origin, samples, route, settings, stops = [], pick
   )
 }
 
-export function RideMap(props: { origin: LatLon; samples: RideSampleWeather[]; route: Route | null; settings: Settings }) {
+export function RideMap({ children, ...props }: {
+  origin: LatLon
+  samples: RideSampleWeather[]
+  route: Route | null
+  settings: Settings
+  /** Extra content under the map (e.g. a save button). */
+  children?: ReactNode
+}) {
   const { route, settings, samples } = props
   const radiusMode = settings.mode === 'radius'
   return (
@@ -120,6 +127,7 @@ export function RideMap(props: { origin: LatLon; samples: RideSampleWeather[]; r
           We check the weather at {samples.length} spots across your riding radius and plan for the worst of them.
         </p>
       )}
+      {children && <div className="mt-3">{children}</div>}
     </Card>
   )
 }

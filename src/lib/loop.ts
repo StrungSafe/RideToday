@@ -1,4 +1,5 @@
 import { destination, distanceKm, samplePolyline, type Route } from './geo'
+import { decodePolyline } from './polyline'
 import type { LatLon } from './types'
 
 /** A generated "just ride" round trip, with what makes it fun. */
@@ -54,32 +55,6 @@ export function loopVias(origin: LatLon, targetKm: number, bearing: number, cloc
 
 // ── Valhalla (FOSSGIS public server) with motorcycle costing ─────────────
 const VALHALLA = 'https://valhalla1.openstreetmap.de/route'
-
-/** Decode a Valhalla/Google encoded polyline (precision 6). */
-export function decodePolyline(str: string, precision = 6): LatLon[] {
-  const factor = 10 ** precision
-  const out: LatLon[] = []
-  let lat = 0
-  let lon = 0
-  let i = 0
-  while (i < str.length) {
-    for (const which of [0, 1]) {
-      let shift = 0
-      let result = 0
-      let b: number
-      do {
-        b = str.charCodeAt(i++) - 63
-        result |= (b & 0x1f) << shift
-        shift += 5
-      } while (b >= 0x20)
-      const delta = result & 1 ? ~(result >> 1) : result >> 1
-      if (which === 0) lat += delta
-      else lon += delta
-    }
-    out.push({ lat: lat / factor, lon: lon / factor })
-  }
-  return out
-}
 
 interface ValhallaResult {
   line: LatLon[]
@@ -272,7 +247,8 @@ export async function planLoops(
       hasHighway: r.hasHighway,
     }
     const loop: LoopRoute = {
-      id: `${seed}-${r.i}`,
+      // Unique per start, settings and shuffle — stops and "saved" state key off this.
+      id: `${origin.lat.toFixed(4)},${origin.lon.toFixed(4)}|${hours}h|${avoidHighways ? 'nohwy' : 'hwy'}|${seed}-${r.i}`,
       line: r.line,
       approximate: false,
       vias: r.vias.map((v) => ({ ...v, frac: nearestFrac(r.line, v) })).sort((a, b) => a.frac - b.frac),

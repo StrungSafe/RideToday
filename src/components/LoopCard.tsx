@@ -5,6 +5,7 @@ import { rankStops, STOP_META, type Stop } from '../lib/stops'
 import type { LatLon, RideSampleWeather, Settings, StopKind } from '../lib/types'
 import { fmtDistance, fmtDuration } from '../lib/units'
 import { RideMapView } from './RideMap'
+import { SaveRouteForm } from './SaveRouteForm'
 import { Card } from './ui'
 
 const KINDS: StopKind[] = ['gas', 'food', 'bar']
@@ -36,24 +37,39 @@ export interface LoopCardProps {
   samples: RideSampleWeather[]
   settings: Settings
   update: (patch: Partial<Settings>) => void
-  stops: { status: 'idle' | 'loading' | 'ready' | 'error'; stops: Stop[] }
+  stops: { status: 'idle' | 'loading' | 'ready' | 'error'; stops: Stop[]; retry: () => void }
+  /** Set when showing a route from the rider's library. */
+  saved: { name: string; stops: Stop[] } | null
+  /** Name of the library entry this planned loop was saved as, if any. */
+  savedAs: string | null
+  defaultSaveName: string
+  onSave: (name: string, makeHome: boolean, picked: Stop[]) => string | null
 }
 
 export function LoopCard(p: LoopCardProps) {
   const { loop, settings: s } = p
   const u = s.units
+  const savedStops = p.saved?.stops
 
   const ranked = useMemo(() => {
     const out = {} as Record<StopKind, Stop[]>
-    for (const k of KINDS) out[k] = loop ? rankStops(p.stops.stops, k, loop.distanceKm).slice(0, PER_KIND) : []
+    for (const k of KINDS) {
+      const best = loop ? rankStops(p.stops.stops, k, loop.distanceKm) : []
+      // A saved route's chosen stops always stay in the list.
+      const pinned = (savedStops ?? []).filter((st) => st.kind === k)
+      const pinnedIds = new Set(pinned.map((st) => st.id))
+      out[k] = [...pinned, ...best.filter((st) => !pinnedIds.has(st.id))].slice(0, Math.max(PER_KIND, pinned.length))
+    }
     return out
-  }, [p.stops.stops, loop])
+  }, [p.stops.stops, loop, savedStops])
 
-  // Top pick of each kind is added to the route by default; the rider can change it.
+  // Saved routes restore their stops; otherwise the top pick of each kind is added by default.
   const [picked, setPicked] = useState<Set<string>>(new Set())
   useEffect(() => {
-    setPicked(new Set(KINDS.map((k) => ranked[k][0]?.id).filter((id): id is string => !!id)))
-  }, [ranked])
+    setPicked(
+      new Set(savedStops?.length ? savedStops.map((st) => st.id) : KINDS.map((k) => ranked[k][0]?.id).filter((id): id is string => !!id)),
+    )
+  }, [ranked, savedStops])
 
   const visibleStops = KINDS.filter((k) => s.stopKinds.includes(k)).flatMap((k) => ranked[k])
   const pickedStops = visibleStops.filter((st) => picked.has(st.id))
@@ -98,8 +114,8 @@ export function LoopCard(p: LoopCardProps) {
           className="group flex items-center gap-1.5 rounded-full bg-throttle-500 px-3 py-1.5 text-sm font-semibold text-white shadow-sm transition hover:bg-throttle-600 disabled:opacity-60"
         >
           <span aria-hidden className="inline-block transition group-hover:rotate-180">🎲</span>
-          Another route
-          {p.status === 'ready' && p.total > 1 && (
+          {p.saved ? 'Plan a new route' : 'Another route'}
+          {!p.saved && p.status === 'ready' && p.total > 1 && (
             <span className="rounded-full bg-white/25 px-1.5 text-[11px]">
               {p.index + 1}/{p.total}
             </span>
@@ -180,6 +196,12 @@ export function LoopCard(p: LoopCardProps) {
             Google Maps may pick different roads between points (and caps at {GOOGLE_MAX_WAYPOINTS} stops) — the GPX follows this exact route.
           </p>
 
+          <SaveRouteForm
+            defaultName={p.defaultSaveName}
+            savedName={p.saved?.name ?? p.savedAs}
+            onSave={(name, home) => p.onSave(name, home, pickedStops)}
+          />
+
           {/* Stops */}
           <div>
             <div className="mb-2 flex flex-wrap items-center gap-2">
@@ -206,7 +228,12 @@ export function LoopCard(p: LoopCardProps) {
 
             {p.stops.status === 'loading' && <p className="text-sm text-stone-500 dark:text-stone-400">Scouting gas, grub and bars along the way…</p>}
             {p.stops.status === 'error' && (
-              <p className="text-sm text-amber-600 dark:text-amber-400">Couldn’t load stops right now (OpenStreetMap search is busy). Try another route in a bit.</p>
+              <p className="text-sm text-amber-600 dark:text-amber-400">
+                Couldn’t load stops right now (OpenStreetMap search is busy).{' '}
+                <button type="button" onClick={p.stops.retry} className="font-semibold underline">
+                  Try again
+                </button>
+              </p>
             )}
 
             {p.stops.status === 'ready' && (

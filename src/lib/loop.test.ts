@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { destination, distanceKm } from './geo'
-import { decodePolyline, loopVias, overlapRatio, rateLoop, rng, twistiness } from './loop'
+import { loopVias, overlapRatio, rateLoop, rng, twistiness } from './loop'
+import { decodePolyline, encodePolyline, simplify } from './polyline'
 import type { LatLon } from './types'
 
 const home = { lat: 40, lon: -105 }
@@ -24,6 +25,29 @@ describe('decodePolyline', () => {
     expect(pts[0].lon).toBeCloseTo(-120.2)
     expect(pts[2].lat).toBeCloseTo(43.252)
     expect(pts[2].lon).toBeCloseTo(-126.453)
+  })
+  it('round-trips with encodePolyline', () => {
+    const pts = path(home, 50, 0.3, (i) => (i % 7) - 3)
+    const back = decodePolyline(encodePolyline(pts), 5)
+    expect(back).toHaveLength(pts.length)
+    back.forEach((p, i) => {
+      expect(p.lat).toBeCloseTo(pts[i].lat, 4)
+      expect(p.lon).toBeCloseTo(pts[i].lon, 4)
+    })
+  })
+})
+
+describe('simplify', () => {
+  it('collapses a straight road to its ends', () => {
+    expect(simplify(path(home, 200, 0.05, () => 0), 5)).toHaveLength(2)
+  })
+  it('keeps the shape of bends within tolerance', () => {
+    const twisty = path(home, 300, 0.02, (i) => (Math.floor(i / 15) % 2 ? 6 : -6))
+    const simple = simplify(twisty, 5)
+    expect(simple.length).toBeLessThan(twisty.length / 2)
+    // Every original point stays within ~5 m of the simplified line's vertices' neighbourhood.
+    const maxGap = Math.max(...twisty.map((p) => Math.min(...simple.map((q) => distanceKm(p, q)))))
+    expect(maxGap).toBeLessThan(0.2)
   })
 })
 
