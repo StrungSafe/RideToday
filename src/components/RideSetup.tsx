@@ -68,7 +68,11 @@ export function RideSetup({ settings: s, update, origin, onOrigin, onLocate, loc
               {locating ? '…' : '🎯 Locate'}
             </button>
           </div>
-          <PlaceSearch placeholder="Search a city or town…" onPick={onOrigin} />
+          <PlaceSearch
+            placeholder="Search a city or town…"
+            onPick={onOrigin}
+            addressHint="Street addresses can’t be searched — try a town, or tap 🎯 Locate."
+          />
           {/* Saved places: start from home, or the commute in either direction. */}
           <div className="mt-2 flex flex-wrap gap-1.5">
             {home && (
@@ -172,7 +176,11 @@ export function RideSetup({ settings: s, update, origin, onOrigin, onLocate, loc
                 </button>
               </div>
             )}
-            <PlaceSearch placeholder="Where are you headed?" onPick={onDestination} />
+            <PlaceSearch
+              placeholder="Where are you headed?"
+              onPick={onDestination}
+              addressHint="Street addresses can’t be searched — try the town you’re heading to."
+            />
             <label className="mt-3 flex cursor-pointer items-center gap-2 text-sm text-stone-600 dark:text-stone-300">
               <input
                 type="checkbox"

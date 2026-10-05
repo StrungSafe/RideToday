@@ -2,10 +2,15 @@ import { useEffect, useId, useRef, useState } from 'react'
 import { searchPlaces } from '../lib/geo'
 import type { Place } from '../lib/types'
 
-export function PlaceSearch({ placeholder, onPick, autoFocus }: {
+/** Town names almost never contain digits; street addresses almost always do. */
+const looksLikeAddress = (q: string) => /\d/.test(q)
+
+export function PlaceSearch({ placeholder, onPick, autoFocus, addressHint }: {
   placeholder: string
   onPick: (p: Place) => void
   autoFocus?: boolean
+  /** Shown instead of "No places found" when the search looks like a street address. */
+  addressHint?: string
 }) {
   const [q, setQ] = useState('')
   const [results, setResults] = useState<Place[]>([])
@@ -26,7 +31,7 @@ export function PlaceSearch({ placeholder, onPick, autoFocus }: {
         .then((r) => {
           setResults(r)
           setActive(0)
-          setError(r.length ? null : 'No places found')
+          setError(r.length ? null : addressHint && looksLikeAddress(q) ? addressHint : 'No places found')
         })
         .catch(() => !ctrl.signal.aborted && setError('Search unavailable'))
     }, 300)
@@ -34,7 +39,7 @@ export function PlaceSearch({ placeholder, onPick, autoFocus }: {
       clearTimeout(t)
       ctrl.abort()
     }
-  }, [q])
+  }, [q, addressHint])
 
   useEffect(() => {
     const onDoc = (e: MouseEvent) => {

@@ -60,6 +60,27 @@ export function RoutesSheet({ open, onClose, places, onPlace, origin, lib, activ
   )
 }
 
+/** Why the search finds towns but not street addresses, and what to do instead. */
+function AddressNote() {
+  return (
+    <details className="group rounded-xl bg-stone-100 px-3 py-2 text-[11px] text-stone-600 dark:bg-stone-800/70 dark:text-stone-300">
+      <summary className="cursor-pointer list-none font-medium [&::-webkit-details-marker]:hidden">
+        ℹ️ Search finds towns, not street addresses. For your exact spot, use <strong>📍 Use my current location</strong> while
+        you’re there. <span className="text-throttle-600 underline group-open:hidden dark:text-throttle-400">Why?</span>
+      </summary>
+      <p className="mt-1.5">
+        RideToday runs entirely in your browser, with no server and no accounts. Place search uses a free, open service
+        (Open-Meteo) that only covers cities and towns. The services that can look up street addresses either need an API key
+        tied to an account (usually paid) or, like OpenStreetMap’s free one, don’t allow search-as-you-type from apps
+        like this one.
+      </p>
+      <p className="mt-1.5">
+        Your location is better anyway: it’s accurate to your driveway, and it’s stored only in this browser.
+      </p>
+    </details>
+  )
+}
+
 function PlaceRow({ kind, place, origin, onChange }: {
   kind: PlaceKey
   place: Place | null
@@ -147,8 +168,13 @@ function PlaceRow({ kind, place, origin, onChange }: {
               </button>
             )}
           </div>
-          <PlaceSearch placeholder={`…or search a town for ${meta.label.toLowerCase()}`} onPick={set} />
+          <PlaceSearch
+            placeholder={`…or search a town for ${meta.label.toLowerCase()}`}
+            onPick={set}
+            addressHint="Street addresses can’t be searched — try your town, or use 📍 Use my current location."
+          />
           {error && <p className="text-xs text-red-600 dark:text-red-400">{error}</p>}
+          <AddressNote />
           {!place && <p className="text-[11px] text-stone-500 dark:text-stone-400">{meta.hint}</p>}
         </div>
       )}
