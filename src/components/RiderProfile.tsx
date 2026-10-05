@@ -1,6 +1,5 @@
 import { useEffect, useRef } from 'react'
 import type { Comfort } from '../lib/types'
-import { Card } from './ui'
 
 const COMFORT: { value: Comfort; emoji: string; label: string; sub: string }[] = [
   { value: 'warm', emoji: '🔥', label: 'Toasty', sub: 'I get cold easily — bundle me up' },
@@ -13,14 +12,6 @@ interface ProfileProps {
   onComfort: (c: Comfort) => void
   atgatt: boolean
   onAtgatt: (v: boolean) => void
-}
-
-export function RiderProfile({ className, ...props }: ProfileProps & { className?: string }) {
-  return (
-    <Card title="Rider Profile" icon="🧑‍🚀" className={className}>
-      <RiderProfileControls {...props} />
-    </Card>
-  )
 }
 
 function RiderProfileControls({ comfort, onComfort, atgatt, onAtgatt }: ProfileProps) {

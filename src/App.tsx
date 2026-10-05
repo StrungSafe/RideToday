@@ -5,7 +5,7 @@ import { Hazards } from './components/Hazards'
 import { Header, REPO_URL } from './components/Header'
 import { PlaceSearch } from './components/PlaceSearch'
 import { RideMap } from './components/RideMap'
-import { RiderProfile, RiderProfileSheet } from './components/RiderProfile'
+import { RiderProfileSheet } from './components/RiderProfile'
 import { RideSetup } from './components/RideSetup'
 import { HourlyTimeline, RouteTimeline } from './components/Timeline'
 import { Card } from './components/ui'
@@ -103,14 +103,6 @@ export default function App() {
                 onDestination={setDestination}
               />
               {locError && <p className="text-sm text-red-600 dark:text-red-400">{locError}</p>}
-              {/* On mobile the profile is reached from the loadout's settings button instead. */}
-              <RiderProfile
-                className="hidden lg:block"
-                comfort={settings.comfort}
-                onComfort={(comfort) => update({ comfort })}
-                atgatt={settings.atgatt}
-                onAtgatt={(atgatt) => update({ atgatt })}
-              />
               {/* Desktop: road report lives in the left column. On mobile it stays with the results (below). */}
               {score && (
                 <div className="hidden lg:block">
