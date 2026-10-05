@@ -30,7 +30,17 @@ const EMPTY: RideForecast = {
   fetchedAt: 0,
 }
 
-export function useRideForecast(origin: Place | null, destination: Place | null, s: Settings, refreshKey: number) {
+/**
+ * Weather for the ride. In loop mode the route comes from the loop planner
+ * (`loopRoute`), and nothing is fetched until a loop is ready.
+ */
+export function useRideForecast(
+  origin: Place | null,
+  destination: Place | null,
+  s: Settings,
+  refreshKey: number,
+  loopRoute: Route | null,
+) {
   const [state, setState] = useState<RideForecast>(EMPTY)
   const speedKmh = SPEED_KMH[s.speed]
 
@@ -41,6 +51,11 @@ export function useRideForecast(origin: Place | null, destination: Place | null,
     }
     if (s.mode === 'route' && !destination) {
       setState({ ...EMPTY, status: 'needs-destination' })
+      return
+    }
+    if (s.mode === 'loop' && !loopRoute) {
+      // Keep showing the last ride's weather (dimmed) while the next loop is planned.
+      setState((prev) => (prev.conditions ? { ...prev, status: 'loading' } : EMPTY))
       return
     }
     const ctrl = new AbortController()
@@ -58,7 +73,8 @@ export function useRideForecast(origin: Place | null, destination: Place | null,
           rideEnd = departAt + s.durationHours * 3600
           samples = radiusSamplePoints(origin, s.radiusKm).map((p) => ({ ...p, from: departAt, to: rideEnd }))
         } else {
-          route = await fetchRoute(origin, destination!, speedKmh * 0.8, ctrl.signal)
+          const isLoop = s.mode === 'loop'
+          route = isLoop ? loopRoute! : await fetchRoute(origin, destination!, speedKmh * 0.8, ctrl.signal)
           const legSecs = route.durationHours * 3600
           const n = Math.max(3, Math.min(10, Math.round(route.distanceKm / 30) + 2))
           const pts = samplePolyline(route.line, n)
@@ -67,7 +83,7 @@ export function useRideForecast(origin: Place | null, destination: Place | null,
             return {
               lat: p.lat,
               lon: p.lon,
-              label: i === 0 ? 'Start' : i === pts.length - 1 ? 'Destination' : `Stop ${i}`,
+              label: i === 0 ? 'Start' : i === pts.length - 1 ? (isLoop ? 'Home' : 'Destination') : `Stop ${i}`,
               distKm: p.frac * route!.distanceKm,
               leg: 'out' as const,
               from: eta - 1800,
@@ -75,7 +91,7 @@ export function useRideForecast(origin: Place | null, destination: Place | null,
             }
           })
           rideEnd = departAt + legSecs
-          if (s.roundTrip) {
+          if (s.roundTrip && !isLoop) {
             const back = [...pts].reverse().slice(1).map((p) => {
               const eta = departAt + legSecs + (1 - p.frac) * legSecs
               return {
@@ -128,6 +144,7 @@ export function useRideForecast(origin: Place | null, destination: Place | null,
     s.durationHours,
     s.departInMinutes,
     s.roundTrip,
+    loopRoute,
     speedKmh,
     refreshKey,
   ])

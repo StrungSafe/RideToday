@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { ConditionsCard } from './components/ConditionsCard'
 import { GearLoadout } from './components/GearLoadout'
 import { Hazards } from './components/Hazards'
+import { LoopCard } from './components/LoopCard'
 import { Header, REPO_URL } from './components/Header'
 import { PlaceSearch } from './components/PlaceSearch'
 import { RideMap } from './components/RideMap'
@@ -9,7 +10,9 @@ import { RiderProfileSheet } from './components/RiderProfile'
 import { RideSetup } from './components/RideSetup'
 import { HourlyTimeline, RouteTimeline } from './components/Timeline'
 import { Card } from './components/ui'
+import { useLoopRoute } from './hooks/useLoopRoute'
 import { useRideForecast } from './hooks/useRideForecast'
+import { useStops } from './hooks/useStops'
 import { useStoredState } from './hooks/useStoredState'
 import { useTheme } from './hooks/useTheme'
 import { recommendGear, rideScore } from './lib/gear'
@@ -27,6 +30,9 @@ const DEFAULT_SETTINGS: Settings = {
   durationHours: 2,
   departInMinutes: 0,
   roundTrip: false,
+  loopHours: 2,
+  avoidHighways: true,
+  stopKinds: ['gas', 'food', 'bar'],
 }
 
 export default function App() {
@@ -55,7 +61,11 @@ export default function App() {
     }
   }, [setOrigin])
 
-  const forecast = useRideForecast(origin, destination, settings, refreshKey)
+  const loopMode = settings.mode === 'loop'
+  const loop = useLoopRoute(origin, loopMode, settings.loopHours, settings.avoidHighways)
+  const loopRoute = loopMode ? loop.loop : null
+  const stops = useStops(loopRoute)
+  const forecast = useRideForecast(origin, destination, settings, refreshKey, loopRoute)
 
   // Refresh automatically when the tab comes back after a while (weather goes stale).
   useEffect(() => {
@@ -112,6 +122,23 @@ export default function App() {
             </aside>
 
             <main className="min-w-0 space-y-5">
+              {loopMode && (
+                <LoopCard
+                  origin={origin}
+                  status={loop.status}
+                  error={loop.error}
+                  loop={loop.loop}
+                  index={loop.index}
+                  total={loop.loops.length}
+                  progress={loop.progress}
+                  onShuffle={loop.shuffle}
+                  samples={forecast.route === loopRoute ? forecast.samples : []}
+                  settings={settings}
+                  update={update}
+                  stops={stops}
+                />
+              )}
+
               {forecast.status === 'needs-destination' && (
                 <Card>
                   <div className="py-8 text-center">
@@ -177,8 +204,8 @@ export default function App() {
                   <div className="lg:hidden">
                     <Hazards hazards={score.hazards} />
                   </div>
-                  <RideMap origin={origin} samples={forecast.samples} route={forecast.route} settings={settings} />
-                  {settings.mode === 'route' ? (
+                  {!loopMode && <RideMap origin={origin} samples={forecast.samples} route={forecast.route} settings={settings} />}
+                  {settings.mode !== 'radius' ? (
                     <RouteTimeline samples={forecast.samples} settings={settings} />
                   ) : (
                     <HourlyTimeline hours={forecast.timeline} departAt={forecast.departAt} rideEnd={forecast.rideEnd} settings={settings} />

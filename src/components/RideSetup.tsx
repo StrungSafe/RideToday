@@ -48,12 +48,37 @@ export function RideSetup({ settings: s, update, origin, onOrigin, onLocate, loc
           value={s.mode}
           onChange={(mode) => update({ mode })}
           options={[
-            { value: 'radius', label: '⭕ Riding radius' },
-            { value: 'route', label: '🛣️ A to B route' },
+            { value: 'radius', label: '⭕ Radius', title: 'Weather all around me' },
+            { value: 'route', label: '🛣️ A → B', title: 'Ride to a destination' },
+            { value: 'loop', label: '🎲 Just ride', title: 'Plan a fun loop for me' },
           ]}
         />
 
-        {s.mode === 'radius' ? (
+        {s.mode === 'loop' ? (
+          <>
+            <p className="-mt-2 text-xs text-stone-500 dark:text-stone-400">
+              No destination? We’ll plan a twisty loop that brings you back home, with gas, food and bar stops.
+            </p>
+            <Slider
+              label="How long do you want to ride?"
+              min={1}
+              max={6}
+              step={0.5}
+              value={s.loopHours}
+              onChange={(loopHours) => update({ loopHours })}
+              display={`~${fmtDuration(s.loopHours)}`}
+            />
+            <label className="flex cursor-pointer items-center gap-2 text-sm text-stone-600 dark:text-stone-300">
+              <input
+                type="checkbox"
+                checked={s.avoidHighways}
+                onChange={(e) => update({ avoidHighways: e.target.checked })}
+                className="h-4 w-4 accent-throttle-500"
+              />
+              Avoid highways (backroads only)
+            </label>
+          </>
+        ) : s.mode === 'radius' ? (
           <>
             <Slider
               label="Riding radius"

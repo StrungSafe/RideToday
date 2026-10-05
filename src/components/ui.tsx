@@ -48,7 +48,7 @@ export function Segmented<T extends string>({ value, options, onChange, label, s
             aria-checked={active}
             title={o.title}
             onClick={() => onChange(o.value)}
-            className={`flex-1 rounded-xl font-medium transition-all ${size === 'sm' ? 'px-2.5 py-1 text-xs' : 'px-3 py-2 text-sm'} ${
+            className={`flex-1 whitespace-nowrap rounded-xl font-medium transition-all ${size === 'sm' ? 'px-2.5 py-1 text-xs' : 'px-2 py-2 text-sm'} ${
               active
                 ? 'bg-white text-stone-900 shadow-sm dark:bg-stone-600 dark:text-white'
                 : 'text-stone-500 hover:text-stone-800 dark:text-stone-400 dark:hover:text-stone-100'

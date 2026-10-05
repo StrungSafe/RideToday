@@ -69,11 +69,11 @@ export function RouteTimeline({ samples, settings }: { samples: RideSampleWeathe
             <li key={i} className="relative flex items-center gap-3">
               <div
                 className={`z-10 grid h-10 w-10 shrink-0 place-items-center rounded-full border-4 border-white text-lg dark:border-stone-900 ${
-                  first ? 'bg-throttle-500' : s.label === 'Destination' ? 'bg-sky-500' : 'bg-stone-200 dark:bg-stone-700'
+                  first ? 'bg-throttle-500' : s.label === 'Destination' || s.label === 'Home' ? 'bg-sky-500' : 'bg-stone-200 dark:bg-stone-700'
                 }`}
                 aria-hidden
               >
-                {first ? '🏍️' : s.label === 'Destination' ? '🏁' : s.leg === 'back' && s.label === 'Home' ? '🏠' : codeIcon(h.code, h.isDay)}
+                {first ? '🏍️' : s.label === 'Destination' ? '🏁' : s.label === 'Home' ? '🏠' : codeIcon(h.code, h.isDay)}
               </div>
               <div className="flex flex-1 flex-wrap items-center justify-between gap-x-4 gap-y-1 rounded-2xl bg-stone-100 px-3 py-2 dark:bg-stone-800/70">
                 <div>

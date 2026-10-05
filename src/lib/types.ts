@@ -16,7 +16,10 @@ export type Comfort = 'warm' | 'normal' | 'cool'
 /** Typical riding speed, used to work out wind chill at speed. */
 export type SpeedProfile = 'city' | 'mixed' | 'highway'
 
-export type RideMode = 'radius' | 'route'
+/** radius = weather around me, route = A to B, loop = 'just ride' round trip we plan for you. */
+export type RideMode = 'radius' | 'route' | 'loop'
+
+export type StopKind = 'gas' | 'food' | 'bar'
 
 export interface Settings {
   units: UnitSystem
@@ -31,6 +34,11 @@ export interface Settings {
   /** Minutes from now until departure. */
   departInMinutes: number
   roundTrip: boolean
+  /** Loop mode: how long the rider wants to ride, in hours. */
+  loopHours: number
+  avoidHighways: boolean
+  /** Which kinds of stops to look for along a loop. */
+  stopKinds: StopKind[]
 }
 
 /** One hourly forecast sample at one location (all metric). */

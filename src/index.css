@@ -102,6 +102,15 @@ input[type='range'].slider::-moz-range-thumb {
   @apply text-throttle-400;
 }
 
+/* Emoji pins for stops along a loop */
+.stop-pin {
+  @apply grid h-[30px] w-[30px] place-items-center rounded-full border-2 border-white bg-white/90 text-base opacity-75 shadow-md dark:border-stone-700 dark:bg-stone-800/90;
+}
+.stop-pin--picked {
+  @apply border-throttle-500 opacity-100 ring-2 ring-throttle-500/40;
+  transform: scale(1.15);
+}
+
 .no-scrollbar::-webkit-scrollbar {
   display: none;
 }
