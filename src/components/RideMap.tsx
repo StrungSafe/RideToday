@@ -41,7 +41,7 @@ export function RideMap({ origin, samples, route, settings }: {
 
   return (
     <Card title="Ride Map" icon="📍">
-      <div className="h-72 overflow-hidden rounded-2xl ring-1 ring-stone-200 dark:ring-stone-800">
+      <div className="h-80 overflow-hidden rounded-2xl md:h-96 ring-1 ring-stone-200 dark:ring-stone-800">
         <MapContainer center={[origin.lat, origin.lon]} zoom={10} scrollWheelZoom={false} className="h-full w-full">
           <TileLayer
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'

@@ -108,6 +108,12 @@ export default function App() {
                 atgatt={settings.atgatt}
                 onAtgatt={(atgatt) => update({ atgatt })}
               />
+              {/* Desktop: road report lives in the left column. On mobile it stays with the results (below). */}
+              {score && (
+                <div className="hidden lg:block">
+                  <Hazards hazards={score.hazards} />
+                </div>
+              )}
             </aside>
 
             <main className="min-w-0 space-y-5">
@@ -167,10 +173,10 @@ export default function App() {
                     </button>
                   </div>
                   <GearLoadout plan={plan} atgatt={settings.atgatt} gusty={c.maxGust >= 40} units={settings.units} />
-                  <div className="grid items-start gap-5 xl:grid-cols-2">
+                  <div className="lg:hidden">
                     <Hazards hazards={score.hazards} />
-                    <RideMap origin={origin} samples={forecast.samples} route={forecast.route} settings={settings} />
                   </div>
+                  <RideMap origin={origin} samples={forecast.samples} route={forecast.route} settings={settings} />
                   {settings.mode === 'route' ? (
                     <RouteTimeline samples={forecast.samples} settings={settings} />
                   ) : (
