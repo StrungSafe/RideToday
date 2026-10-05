@@ -7,6 +7,12 @@ export interface Place extends LatLon {
   name: string
 }
 
+/** Places the rider saves once and reuses: a starting point and a commute. */
+export interface MyPlaces {
+  home: Place | null
+  work: Place | null
+}
+
 export type UnitSystem = 'imperial' | 'metric'
 export type ThemePref = 'system' | 'light' | 'dark'
 

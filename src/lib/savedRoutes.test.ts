@@ -81,7 +81,7 @@ describe('library storage', () => {
 
   it('saves and loads', () => {
     vi.stubGlobal('localStorage', fakeStorage)
-    const lib = { homeId: null, routes: [abToSaved(origin, origin, false, 'x')] }
+    const lib = { routes: [abToSaved(origin, origin, false, 'x')] }
     expect(saveLibrary(lib)).toBeNull()
     expect(loadLibrary().routes[0].name).toBe('x')
   })
@@ -93,7 +93,7 @@ describe('library storage', () => {
         throw new DOMException('full', 'QuotaExceededError')
       },
     })
-    expect(saveLibrary({ homeId: null, routes: [] })).toMatch(/full/)
+    expect(saveLibrary({ routes: [] })).toMatch(/full/)
   })
 
   it('ignores corrupt data', () => {

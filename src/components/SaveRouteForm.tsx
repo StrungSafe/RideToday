@@ -1,16 +1,15 @@
 import { useEffect, useId, useState } from 'react'
 
-/** "Save route" button that expands into a small inline form (name + home route). */
+/** "Save route" button that expands into a small inline form to name the route. */
 export function SaveRouteForm({ defaultName, onSave, savedName }: {
   defaultName: string
   /** Returns an error message, or null on success. */
-  onSave: (name: string, makeHome: boolean) => string | null
+  onSave: (name: string) => string | null
   /** Set when the current route is already in the library. */
   savedName: string | null
 }) {
   const [open, setOpen] = useState(false)
   const [name, setName] = useState(defaultName)
-  const [home, setHome] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const nameId = useId()
 
@@ -40,7 +39,7 @@ export function SaveRouteForm({ defaultName, onSave, savedName }: {
   }
 
   const submit = () => {
-    const err = onSave(name.trim() || defaultName, home)
+    const err = onSave(name.trim() || defaultName)
     setError(err)
     if (!err) setOpen(false)
   }
@@ -64,10 +63,6 @@ export function SaveRouteForm({ defaultName, onSave, savedName }: {
         onChange={(e) => setName(e.target.value)}
         className="w-full rounded-xl border border-stone-200 bg-white px-3 py-2 text-sm outline-none ring-throttle-500/40 focus:border-throttle-500 focus:ring-4 dark:border-stone-700 dark:bg-stone-800"
       />
-      <label className="flex cursor-pointer items-center gap-2 text-sm text-stone-600 dark:text-stone-300">
-        <input type="checkbox" checked={home} onChange={(e) => setHome(e.target.checked)} className="h-4 w-4 accent-throttle-500" />
-        🏠 Make this my home route
-      </label>
       {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}
       <div className="flex gap-2">
         <button type="submit" className="flex-1 rounded-xl bg-throttle-500 px-3 py-2 text-sm font-semibold text-white hover:bg-throttle-600">

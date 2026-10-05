@@ -44,11 +44,10 @@ export interface SavedAB extends SavedBase {
 }
 
 export interface RouteLibrary {
-  homeId: string | null
   routes: SavedRoute[]
 }
 
-export const EMPTY_LIBRARY: RouteLibrary = { homeId: null, routes: [] }
+export const EMPTY_LIBRARY: RouteLibrary = { routes: [] }
 export const STORAGE_KEY = 'ridetoday.routes'
 
 /** Simplification tolerance: well under a lane's width, invisible on the map and fine for GPS. */
@@ -103,7 +102,7 @@ export function loadLibrary(): RouteLibrary {
     if (!raw) return EMPTY_LIBRARY
     const parsed = JSON.parse(raw) as RouteLibrary
     if (!Array.isArray(parsed.routes)) return EMPTY_LIBRARY
-    return { homeId: parsed.homeId ?? null, routes: parsed.routes.filter((r) => r && r.v === 1) }
+    return { routes: parsed.routes.filter((r) => r && r.v === 1) }
   } catch {
     return EMPTY_LIBRARY
   }

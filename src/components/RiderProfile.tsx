@@ -1,5 +1,5 @@
-import { useEffect, useRef } from 'react'
 import type { Comfort } from '../lib/types'
+import { Sheet } from './Sheet'
 
 const COMFORT: { value: Comfort; emoji: string; label: string; sub: string }[] = [
   { value: 'warm', emoji: '🔥', label: 'Toasty', sub: 'I get cold easily — bundle me up' },
@@ -77,56 +77,11 @@ function RiderProfileControls({ comfort, onComfort, atgatt, onAtgatt }: ProfileP
   )
 }
 
-/**
- * Rider settings in a modal: a bottom sheet on phones, a centered dialog on larger screens.
- * Uses the native <dialog> element for focus handling and Esc-to-close.
- */
+/** Rider settings, opened from the loadout's gear button. */
 export function RiderProfileSheet({ open, onClose, ...props }: ProfileProps & { open: boolean; onClose: () => void }) {
-  const ref = useRef<HTMLDialogElement>(null)
-
-  useEffect(() => {
-    const d = ref.current
-    if (!d) return
-    if (open && !d.open) d.showModal()
-    else if (!open && d.open) d.close()
-  }, [open])
-
   return (
-    <dialog
-      ref={ref}
-      aria-labelledby="rider-settings-title"
-      onClose={onClose}
-      onClick={(e) => e.target === e.currentTarget && onClose()}
-      className="animate-sheet mx-0 mb-0 mt-auto w-full max-w-full rounded-t-3xl bg-white p-0 text-stone-900 shadow-2xl backdrop:bg-black/40 sm:m-auto sm:max-w-md sm:rounded-3xl dark:bg-stone-900 dark:text-stone-100"
-    >
-      <div className="p-5 pb-[max(1.25rem,env(safe-area-inset-bottom))]">
-        <div className="mx-auto mb-3 h-1.5 w-10 rounded-full bg-stone-300 sm:hidden dark:bg-stone-700" aria-hidden />
-        <header className="mb-4 flex items-center justify-between gap-2">
-          <h2
-            id="rider-settings-title"
-            className="flex items-center gap-2 font-display text-lg font-semibold uppercase tracking-wide text-stone-700 dark:text-stone-200"
-          >
-            <span aria-hidden>🧑‍🚀</span>
-            Rider Profile
-          </h2>
-          <button
-            type="button"
-            onClick={onClose}
-            aria-label="Close rider settings"
-            className="grid h-9 w-9 place-items-center rounded-full text-stone-500 hover:bg-stone-100 dark:hover:bg-stone-800"
-          >
-            ✕
-          </button>
-        </header>
-        <RiderProfileControls {...props} />
-        <button
-          type="button"
-          onClick={onClose}
-          className="mt-5 w-full rounded-2xl bg-throttle-500 py-3 font-display text-base font-semibold uppercase tracking-wide text-white transition hover:bg-throttle-600"
-        >
-          Done
-        </button>
-      </div>
-    </dialog>
+    <Sheet open={open} onClose={onClose} title="Rider Profile" icon="🧑‍🚀">
+      <RiderProfileControls {...props} />
+    </Sheet>
   )
 }

@@ -43,7 +43,7 @@ export interface LoopCardProps {
   /** Name of the library entry this planned loop was saved as, if any. */
   savedAs: string | null
   defaultSaveName: string
-  onSave: (name: string, makeHome: boolean, picked: Stop[]) => string | null
+  onSave: (name: string, picked: Stop[]) => string | null
 }
 
 export function LoopCard(p: LoopCardProps) {
@@ -199,7 +199,7 @@ export function LoopCard(p: LoopCardProps) {
           <SaveRouteForm
             defaultName={p.defaultSaveName}
             savedName={p.saved?.name ?? p.savedAs}
-            onSave={(name, home) => p.onSave(name, home, pickedStops)}
+            onSave={(name) => p.onSave(name, pickedStops)}
           />
 
           {/* Stops */}

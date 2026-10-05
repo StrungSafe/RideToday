@@ -12,7 +12,9 @@ A quick weather check and gear call for motorcycle riders. Front-end only: React
   - It tries several candidate loops and rates each one for twistiness, hills, not doubling back, and how close it is to your ride time. You get a **Fun rating /10**, and **Another route** moves to the next candidate.
   - It suggests **gas, food and bar stops** along the loop: gas early or midway, food around halfway, bars at the finish (after you park the bike). You can choose which stops to add.
   - Take it with you via **Open in Google Maps** or a **GPX file** for your GPS.
-- **Saved routes.** Save Just ride loops and A → B routes in your browser, and mark one as your 🏠 **home route** for one-tap rides. Loops keep their exact route, simplified to about 5 m, which is roughly 3–7 KB each. A → B routes keep only their endpoints (~250 bytes) and are re-routed when loaded. Nothing leaves your device.
+- **Home, work and saved routes.** These live behind the ⚙️ button on Your Ride, and nothing leaves your device.
+  - Save your 🏠 **Home** and 🏢 **Work** places. Then **🏠 Home** starts any ride from home, and **🏢 To work** / **🏠 Head home** run your commute with the weather and gear for that trip.
+  - You can also save Just ride loops and A → B routes. Loops keep their exact route, simplified to about 5 m, which is roughly 3–7 KB each. A → B routes keep only their endpoints (~250 bytes) and are re-routed when loaded.
 - **Ride-O-Meter.** A 0–100 score shown on a speedometer gauge, with a verdict ("Send it!" down to "Maybe take the cage").
 - **Wind chill at speed.** Pick City, Backroads or Highway and the app works out how cold the air feels on the bike.
 - **Gear loadout.** A cartoon rider is dressed in the recommended gear (helmet, layers, jacket, gloves, pants, boots, rain gear and extras), and each item comes with the reason for it.

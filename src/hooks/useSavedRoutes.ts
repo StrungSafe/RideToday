@@ -23,28 +23,17 @@ export function useSavedRoutes() {
     [],
   )
 
-  const add = useCallback(
-    (route: SavedRoute, makeHome: boolean) =>
-      commit({ homeId: makeHome ? route.id : lib.homeId, routes: [route, ...lib.routes] }),
-    [commit, lib],
-  )
+  const add = useCallback((route: SavedRoute) => commit({ routes: [route, ...lib.routes] }), [commit, lib])
 
   const remove = useCallback(
-    (id: string) => commit({ homeId: lib.homeId === id ? null : lib.homeId, routes: lib.routes.filter((r) => r.id !== id) }),
+    (id: string) => commit({ routes: lib.routes.filter((r) => r.id !== id) }),
     [commit, lib],
   )
 
   const rename = useCallback(
-    (id: string, name: string) => commit({ ...lib, routes: lib.routes.map((r) => (r.id === id ? { ...r, name } : r)) }),
+    (id: string, name: string) => commit({ routes: lib.routes.map((r) => (r.id === id ? { ...r, name } : r)) }),
     [commit, lib],
   )
 
-  /** Make a route the home route, or clear it if it already is. */
-  const toggleHome = useCallback(
-    (id: string) => commit({ ...lib, homeId: lib.homeId === id ? null : id }),
-    [commit, lib],
-  )
-
-  const home = lib.routes.find((r) => r.id === lib.homeId) ?? null
-  return { lib, home, add, remove, rename, toggleHome }
+  return { lib, add, remove, rename }
 }

@@ -7,8 +7,8 @@ import { Header, REPO_URL } from './components/Header'
 import { PlaceSearch } from './components/PlaceSearch'
 import { RideMap } from './components/RideMap'
 import { RiderProfileSheet } from './components/RiderProfile'
-import { RideSetup } from './components/RideSetup'
-import { SavedRoutes } from './components/SavedRoutes'
+import { RideSetup, type Commute } from './components/RideSetup'
+import { RoutesSheet } from './components/RoutesSheet'
 import { SaveRouteForm } from './components/SaveRouteForm'
 import { HourlyTimeline, RouteTimeline } from './components/Timeline'
 import { Card } from './components/ui'
@@ -21,7 +21,7 @@ import { useTheme } from './hooks/useTheme'
 import { recommendGear, rideScore } from './lib/gear'
 import { getBrowserLocation, reverseGeocode } from './lib/geo'
 import { abToSaved, loopToSaved, savedToLoop, type SavedRoute } from './lib/savedRoutes'
-import type { LatLon, Place, Settings } from './lib/types'
+import type { LatLon, MyPlaces, Place, Settings } from './lib/types'
 import { KM_PER_MILE, defaultUnits, fmtDistance } from './lib/units'
 
 const shortName = (p: Place) => p.name.split(',')[0]
@@ -51,6 +51,8 @@ export default function App() {
   const [locating, setLocating] = useState(false)
   const [locError, setLocError] = useState<string | null>(null)
   const [profileOpen, setProfileOpen] = useState(false)
+  const [routesOpen, setRoutesOpen] = useState(false)
+  const [places, setPlaces] = useStoredState<MyPlaces>('ridetoday.places', { home: null, work: null })
   const library = useSavedRoutes()
   /** The saved route currently being shown, if any. */
   const [activeSavedId, setActiveSavedId] = useState<string | null>(null)
@@ -109,6 +111,20 @@ export default function App() {
     [setOrigin, setDestination, update],
   )
 
+  /** The work route: home → work in the morning, work → home after. */
+  const commute = useCallback(
+    (c: Commute) => {
+      const { home, work } = places
+      if (!home || !work) return
+      setActiveSavedId(null)
+      setOrigin(c === 'to-work' ? home : work)
+      setDestination(c === 'to-work' ? work : home)
+      update({ mode: 'route', roundTrip: false })
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+    },
+    [places, setOrigin, setDestination, update],
+  )
+
   const activeSaved = library.lib.routes.find((r) => r.id === activeSavedId) ?? null
   // Rebuild only when the route itself changes (not on rename), so weather isn't re-fetched needlessly.
   const savedLoopLine = activeSaved?.kind === 'loop' ? activeSaved.line : null
@@ -161,7 +177,9 @@ export default function App() {
           (r) => r.kind === 'ab' && samePlace(r.origin, origin) && samePlace(r.destination, destination) && r.roundTrip === settings.roundTrip,
         )?.name ?? null)
       : null
-  const showHomeShortcut = library.home && library.home.id !== activeSavedId
+  const isCommute = (from: Place | null, to: Place | null) =>
+    settings.mode === 'route' && !settings.roundTrip && !!(origin && destination && from && to) && samePlace(origin, from) && samePlace(destination, to)
+  const showCommuteShortcut = !!places.home && !!places.work
 
   return (
     <div className="asphalt min-h-screen">
@@ -182,17 +200,11 @@ export default function App() {
                 locating={locating}
                 destination={destination}
                 onDestination={pickDestination}
+                places={places}
+                onCommute={commute}
+                onOpenSettings={() => setRoutesOpen(true)}
               />
               {locError && <p className="text-sm text-red-600 dark:text-red-400">{locError}</p>}
-              <SavedRoutes
-                lib={library.lib}
-                activeId={activeSavedId}
-                units={settings.units}
-                onRide={rideSaved}
-                onRemove={library.remove}
-                onRename={library.rename}
-                onToggleHome={library.toggleHome}
-              />
               {/* Desktop: road report lives in the left column. On mobile it stays with the results (below). */}
               {score && (
                 <div className="hidden lg:block">
@@ -202,20 +214,30 @@ export default function App() {
             </aside>
 
             <main className="min-w-0 space-y-5">
-              {/* One tap to the home route. On desktop it's also in the sidebar's Saved Routes. */}
-              {showHomeShortcut && library.home && (
-                <button
-                  type="button"
-                  onClick={() => rideSaved(library.home!)}
-                  className="flex w-full items-center gap-3 rounded-2xl border-2 border-throttle-400 bg-throttle-50 px-4 py-2.5 text-left transition hover:bg-throttle-100 lg:hidden dark:border-throttle-500/50 dark:bg-throttle-500/10 dark:hover:bg-throttle-500/20"
-                >
-                  <span className="text-2xl" aria-hidden>🏠</span>
-                  <span className="min-w-0 flex-1">
-                    <span className="block text-xs font-semibold uppercase tracking-wide text-throttle-600 dark:text-throttle-400">Home route</span>
-                    <span className="block truncate font-semibold">{library.home.name}</span>
-                  </span>
-                  <span className="font-display text-sm font-semibold uppercase">Ride it →</span>
-                </button>
+              {/* Phones: Your Ride sits at the bottom, so the commute gets a shortcut up top. */}
+              {showCommuteShortcut && (
+                <div className="grid grid-cols-2 gap-2 lg:hidden">
+                  {(
+                    [
+                      ['to-work', '🏢', 'To work', isCommute(places.home, places.work)],
+                      ['to-home', '🏠', 'Head home', isCommute(places.work, places.home)],
+                    ] as const
+                  ).map(([c, icon, label, active]) => (
+                    <button
+                      key={c}
+                      type="button"
+                      onClick={() => commute(c)}
+                      aria-pressed={active}
+                      className={`flex items-center justify-center gap-2 rounded-2xl border-2 px-3 py-2.5 font-display text-sm font-semibold uppercase tracking-wide transition ${
+                        active
+                          ? 'border-throttle-500 bg-throttle-500 text-white'
+                          : 'border-throttle-400 bg-throttle-50 text-throttle-700 dark:border-throttle-500/50 dark:bg-throttle-500/10 dark:text-throttle-300'
+                      }`}
+                    >
+                      <span aria-hidden>{icon}</span> {label}
+                    </button>
+                  ))}
+                </div>
               )}
 
               {loopMode && (
@@ -235,7 +257,7 @@ export default function App() {
                   saved={savedLoopInfo}
                   savedAs={loopSavedAs}
                   defaultSaveName={loopRoute ? `${shortName(origin)} loop · ${fmtDistance(loopRoute.distanceKm, settings.units)}` : ''}
-                  onSave={(name, home, picked) => (loopRoute ? library.add(loopToSaved(loopRoute, origin, picked, name), home) : null)}
+                  onSave={(name, picked) => (loopRoute ? library.add(loopToSaved(loopRoute, origin, picked, name)) : null)}
                 />
               )}
 
@@ -310,7 +332,7 @@ export default function App() {
                         <SaveRouteForm
                           defaultName={`${shortName(origin)} → ${shortName(destination)}`}
                           savedName={abSavedAs}
-                          onSave={(name, home) => library.add(abToSaved(origin, destination, settings.roundTrip, name), home)}
+                          onSave={(name) => library.add(abToSaved(origin, destination, settings.roundTrip, name))}
                         />
                       )}
                     </RideMap>
@@ -333,6 +355,19 @@ export default function App() {
           onComfort={(comfort) => update({ comfort })}
           atgatt={settings.atgatt}
           onAtgatt={(atgatt) => update({ atgatt })}
+        />
+        <RoutesSheet
+          open={routesOpen}
+          onClose={() => setRoutesOpen(false)}
+          places={places}
+          onPlace={(key, p) => setPlaces((prev) => ({ ...prev, [key]: p }))}
+          origin={origin}
+          lib={library.lib}
+          activeId={activeSavedId}
+          units={settings.units}
+          onRide={rideSaved}
+          onRemove={library.remove}
+          onRename={library.rename}
         />
 
         <footer className="mt-10 border-t border-stone-200 pt-4 text-center text-xs text-stone-500 dark:border-stone-800 dark:text-stone-400">
