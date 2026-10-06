@@ -3,6 +3,7 @@
   "private": true,
   "version": "0.1.0",
   "license": "MIT",
+  "homepage": "https://ridetoday.motorcycles",
   "repository": {
     "type": "git",
     "url": "https://github.com/StrungSafe/RideToday.git"

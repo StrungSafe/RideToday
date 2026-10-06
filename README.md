@@ -2,6 +2,8 @@
 
 A quick weather check and gear call for motorcycle riders. Front-end only: React + Tailwind CSS, no backend and no API keys.
 
+**Ride it now at [ridetoday.motorcycles](https://ridetoday.motorcycles)**
+
 ## Features
 
 - **Local weather.** Uses your browser location, or you can search for any city.
@@ -14,7 +16,7 @@ A quick weather check and gear call for motorcycle riders. Front-end only: React
   - Take it with you via **Open in Google Maps** or a **GPX file** for your GPS.
 - **Home, work and saved routes.** These live behind the ⚙️ button on Your Ride and are stored only in your browser.
   - Save your 🏠 **Home** and 🏢 **Work** places by searching a street address, using your current location, or dropping a 📌 pin on a map. The pin needs no search at all. Then **🏠 Home** starts any ride from home, and **🏢 To work** / **🏠 Head home** run your commute with the weather and gear for that trip.
-  - You can also save Just ride loops and A → B routes. Loops keep their exact route, simplified to about 5 m, which is roughly 3–7 KB each. A → B routes keep only their endpoints (~250 bytes) and are re-routed when loaded.
+  - You can also save Just ride loops and A → B routes. Loops keep their exact route, and A → B routes are re-routed when loaded.
 - **Ride-O-Meter.** A 0–100 score shown on a speedometer gauge, with a verdict ("Send it!" down to "Maybe take the cage").
 - **Wind chill at speed.** Pick City, Backroads or Highway and the app works out how cold the air feels on the bike.
 - **Gear loadout.** A cartoon rider is dressed in the recommended gear (helmet, layers, jacket, gloves, pants, boots, rain gear and extras), and each item comes with the reason for it.
